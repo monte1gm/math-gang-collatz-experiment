@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Gang Collatz Experiment</title>
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <h1>Math Gang Collatz Experiment</h1>
+      <p>Edit the inputs in a panel, run that calculation, and review the JSON output below. Large samples are capped by the local Flask API to keep runs responsive.</p>
+    </header>
+
+    <section class="analysis-groups" aria-label="Collatz analysis tools">
+      <section class="tool-group" aria-labelledby="static-title">
+        <header class="group-header">
+          <div>
+            <span class="group-kicker">Static</span>
+            <h2 id="static-title">Distribution and Residue Summaries</h2>
+          </div>
+          <p>Use these for aggregate snapshots over sampled integers: frequencies, mean drift, autocorrelation, and residue-class differences.</p>
+        </header>
+
+        <div class="tool-grid">
+          <section class="tool-panel" aria-labelledby="v-analysis-title">
+            <h3 id="v-analysis-title">v Distribution and Drift</h3>
+            <p class="tool-note">Samples odd integers from start, then estimates v frequencies, log drift, and autocorrelation.</p>
+            <div class="input-grid">
+              <label for="v-start-input">
+                <span>Start</span>
+                <input id="v-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="v-count-input">
+                <span>Sample count</span>
+                <input id="v-count-input" type="number" min="1" step="1" value="10000">
+              </label>
+              <label for="v-max-input">
+                <span>Max v bucket</span>
+                <input id="v-max-input" type="number" min="1" step="1" value="10">
+              </label>
+              <label for="v-lag-1-input">
+                <span>Autocorr lag A</span>
+                <input id="v-lag-1-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="v-lag-2-input">
+                <span>Autocorr lag B</span>
+                <input id="v-lag-2-input" type="number" min="1" step="1" value="2">
+              </label>
+            </div>
+            <button id="v-analysis-button" type="button">Run v Analysis</button>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="residue-title">
+            <h3 id="residue-title">Residue-Class Drift</h3>
+            <p class="tool-note">Groups sampled odd integers by n mod m and reports drift plus high-v event frequency.</p>
+            <div class="input-grid">
+              <label for="residue-start-input">
+                <span>Start</span>
+                <input id="residue-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="residue-mod-input">
+                <span>Modulus m</span>
+                <input id="residue-mod-input" type="number" min="2" step="1" value="16">
+              </label>
+              <label for="residue-count-input">
+                <span>Sample count</span>
+                <input id="residue-count-input" type="number" min="1" step="1" value="20000">
+              </label>
+              <label for="residue-threshold-input">
+                <span>High-v threshold</span>
+                <input id="residue-threshold-input" type="number" min="1" step="1" value="3">
+              </label>
+            </div>
+            <button id="residue-analysis-button" type="button">Run Residue Analysis</button>
+          </section>
+        </div>
+      </section>
+
+      <section class="tool-group" aria-labelledby="dynamic-title">
+        <header class="group-header">
+          <div>
+            <span class="group-kicker">Dynamic</span>
+            <h2 id="dynamic-title">Transition Maps</h2>
+          </div>
+          <p>Use these to study how states move: residue classes under the odd-only map and empirical transitions between consecutive v values.</p>
+        </header>
+
+        <div class="tool-grid">
+          <section class="tool-panel" aria-labelledby="transitions-title">
+            <h3 id="transitions-title">Residue Transitions</h3>
+            <p class="tool-note">Tracks how odd residue classes move under T(n) = (3n + 1) / 2^v.</p>
+            <div class="input-grid">
+              <label for="transition-mod-input">
+                <span>Modulus m</span>
+                <input id="transition-mod-input" type="number" min="2" step="1" value="16">
+              </label>
+              <label for="transition-steps-input">
+                <span>Multi-step depth</span>
+                <input id="transition-steps-input" type="number" min="1" step="1" value="5">
+              </label>
+            </div>
+            <button id="transitions-button" type="button">Run Transitions</button>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="v-transitions-title">
+            <h3 id="v-transitions-title">v Transition Matrix</h3>
+            <p class="tool-note">Estimates empirical transition probabilities P(v next | v current) from sampled trajectories.</p>
+            <div class="input-grid">
+              <label for="vt-start-input">
+                <span>Start</span>
+                <input id="vt-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="vt-count-input">
+                <span>Sample count</span>
+                <input id="vt-count-input" type="number" min="1" step="1" value="5000">
+              </label>
+              <label for="vt-max-steps-input">
+                <span>Max odd steps</span>
+                <input id="vt-max-steps-input" type="number" min="1" step="1" value="100">
+              </label>
+              <label for="vt-max-input">
+                <span>Max v bucket</span>
+                <input id="vt-max-input" type="number" min="1" step="1" value="10">
+              </label>
+            </div>
+            <button id="v-transitions-button" type="button">Run v Transition Matrix</button>
+          </section>
+        </div>
+      </section>
+
+      <section class="tool-group" aria-labelledby="temporal-title">
+        <header class="group-header">
+          <div>
+            <span class="group-kicker">Temporal</span>
+            <h2 id="temporal-title">Paths and Waiting Times</h2>
+          </div>
+          <p>Use these for step-indexed behavior: complete trajectories and first-hit timing for strong contraction events.</p>
+        </header>
+
+        <div class="tool-grid">
+          <section class="tool-panel" aria-labelledby="trajectory-title">
+            <h3 id="trajectory-title">Trajectory</h3>
+            <p class="tool-note">Computes the full Collatz path, odd-only path, log path, deltas, v sequence, and summary.</p>
+            <div class="input-grid">
+              <label for="trajectory-input">
+                <span>Starting value n</span>
+                <input id="trajectory-input" type="number" min="1" step="1" value="27">
+              </label>
+            </div>
+            <button id="test-api-button" type="button">Run Trajectory</button>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="time-title">
+            <h3 id="time-title">Time to v Threshold</h3>
+            <p class="tool-note">Measures odd-only steps until a trajectory first reaches v greater than or equal to the threshold.</p>
+            <div class="input-grid">
+              <label for="time-start-input">
+                <span>Start</span>
+                <input id="time-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="time-threshold-input">
+                <span>v threshold</span>
+                <input id="time-threshold-input" type="number" min="2" step="1" value="3">
+              </label>
+              <label for="time-count-input">
+                <span>Sample count</span>
+                <input id="time-count-input" type="number" min="1" step="1" value="5000">
+              </label>
+            </div>
+            <button id="time-to-v-button" type="button">Run Time to v</button>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="drift-title">
+            <h3 id="drift-title">Cumulative Drift</h3>
+            <p class="tool-note">Tracks S_k = sum(log(3) - v_k log(2)) along odd-only steps for sampled trajectories.</p>
+            <div class="input-grid">
+              <label for="drift-start-input">
+                <span>Start</span>
+                <input id="drift-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="drift-count-input">
+                <span>Sample count</span>
+                <input id="drift-count-input" type="number" min="1" step="1" value="100">
+              </label>
+              <label for="drift-max-steps-input">
+                <span>Max odd steps</span>
+                <input id="drift-max-steps-input" type="number" min="1" step="1" value="200">
+              </label>
+            </div>
+            <button id="drift-trajectories-button" type="button">Run Drift Trajectories</button>
+          </section>
+
+          <section class="tool-panel" aria-labelledby="expansion-title">
+            <h3 id="expansion-title">Expansion Run Lengths</h3>
+            <p class="tool-note">Measures consecutive odd-only steps where v = 1, the pure expansion case.</p>
+            <div class="input-grid">
+              <label for="expansion-start-input">
+                <span>Start</span>
+                <input id="expansion-start-input" type="number" min="1" step="1" value="1">
+              </label>
+              <label for="expansion-count-input">
+                <span>Sample count</span>
+                <input id="expansion-count-input" type="number" min="1" step="1" value="5000">
+              </label>
+              <label for="expansion-max-steps-input">
+                <span>Max odd steps</span>
+                <input id="expansion-max-steps-input" type="number" min="1" step="1" value="200">
+              </label>
+            </div>
+            <button id="expansion-runs-button" type="button">Run Expansion Analysis</button>
+          </section>
+        </div>
+      </section>
+    </section>
+
+    <section class="output-panel" aria-labelledby="output-title">
+      <h2 id="output-title">Output</h2>
+      <pre id="output" class="output" aria-live="polite">{}</pre>
+      <div id="chart-container">
+        <canvas id="chart-canvas"></canvas>
+        <div id="chart-legend" class="chart-legend" aria-live="polite"></div>
+      </div>
+      <div class="copy-controls">
+        <button id="copy-json" type="button">Copy JSON</button>
+        <button id="copy-data" type="button">Copy Chart Data</button>
+        <button id="copy-image" type="button">Copy Chart Image</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/lib/chart.min.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
